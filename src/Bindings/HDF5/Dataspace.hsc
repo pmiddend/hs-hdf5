@@ -139,7 +139,17 @@ encodeDataspace (Dataspace space_id) =
     withOutByteString $ \buf bufSz ->
         withInOut_ bufSz $ \ioBufSz ->
             withErrorCheck_ $
+#if H5_VERSION_GE(1,12,0)
+# if H5Sencode_vers == 2
+                h5s_encode space_id buf ioBufSz H5P_DEFAULT
+# elif H5Sencode_vers == 1
                 h5s_encode space_id buf ioBufSz
+# else
+#  error "H5Sencode_vers set to invalid value"
+# endif
+#else
+                h5s_encode space_id buf ioBufSz
+#endif
 
 decodeDataspace :: BS.ByteString -> IO Dataspace
 decodeDataspace bs = BS.unsafeUseAsCString bs $ \buf ->
