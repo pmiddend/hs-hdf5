@@ -17,9 +17,7 @@ import Foreign.Storable
 import Bindings.HDF5.Raw.H5
 import Bindings.HDF5.Raw.H5I
 import Bindings.HDF5.Raw.H5T
-#if H5Fget_info_vers != 1
 import Bindings.HDF5.Raw.H5O
-#endif
 import Foreign.Ptr.Conventions
 
 -- |Maximum length of a link's name
@@ -66,12 +64,10 @@ h5l_MAX_LINK_NAME_LEN = #const H5L_MAX_LINK_NAME_LEN
 #newtype_const H5L_type_t, H5L_TYPE_UD_MIN
 
 -- |Information struct for link (for 'h5l_get_info' / 'h5l_get_info_by_idx')
-#if H5Fget_info_vers == 1
+#if H5L_info_t_vers == 1 || H5_VERSION_LE(1,11,0)
 #starttype H5L_info_t
-#elif H5Fget_info_vers == 2
-#starttype H5L_info2_t
 #else
-#error "unknown info vers"
+#starttype H5L_info2_t
 #endif
 
 -- |Type of link
@@ -86,8 +82,8 @@ h5l_MAX_LINK_NAME_LEN = #const H5L_MAX_LINK_NAME_LEN
 -- |Character set of link name
 #field cset,                <H5T_cset_t>
 
-#if (H5Fget_info_vers == 1)
 -- |Address hard link points to
+#if H5L_info_t_vers == 1 || H5_VERSION_LE(1,11,0)
 #union_field u.address,     <haddr_t>
 #else
 #union_field u.token,       <H5O_token_t>
@@ -99,9 +95,9 @@ h5l_MAX_LINK_NAME_LEN = #const H5L_MAX_LINK_NAME_LEN
 #union_field u.val_size,    <size_t>
 #stoptype
 
-#if H5Fget_info_vers == 2
-type H5L_info_t = H5L_info2_t
-#endif
+-- #if H5L_info_t_vers != 1 || H5_VERSION_LE(1,11,0)
+-- type H5L_info_t = H5L_info2_t
+-- #endif
 
 -- /* The H5L_class_t struct can be used to override the behavior of a
 --  * "user-defined" link class. Users should populate the struct with callback
@@ -184,9 +180,8 @@ type H5L_query_func_t a b = FunPtr (CString -> Ptr a -> CSize -> Out b -> CSize 
 --
 -- > typedef herr_t (*H5L_iterate_t)(hid_t group, const char *name, const H5L_info_t *info,
 -- >     void *op_data);
--- #if (H5Fget_info_vers == 1)
 type H5L_iterate_t a = FunPtr (HId_t -> CString -> In H5L_info_t -> InOut a -> IO HErr_t)
-#if (H5Fget_info_vers != 1)
+#if H5L_iterate_t_vers != 1
 type H5L_iterate2_t a = H5L_iterate_t a
 #endif
 

@@ -167,7 +167,7 @@ import Foreign.Ptr.Conventions
 
 -- |Information struct for object
 -- (for 'h5o_get_info'/ 'h5o_get_info_by_name' / 'h5o_get_info_by_idx')
-#if (H5Fget_info_vers == 1)
+#if H5O_info_t_vers == 1 || H5_VERSION_LE(1,11,0)
 #starttype H5O_info_t
 #else
 #starttype H5O_info2_t
@@ -176,7 +176,7 @@ import Foreign.Ptr.Conventions
 -- |File number that object is located in
 #field fileno,          CULong
 
-#if (H5Fget_info_vers == 1)
+#if H5O_info_t_vers != 2
 -- |Object address in file
 #field addr,            <haddr_t>
 #endif
@@ -209,14 +209,14 @@ import Foreign.Ptr.Conventions
 
 #if H5_VERSION_GE(1,8,4)
 
-#if (H5Fget_info_vers == 1)
+#if H5O_info_t_vers != 2
 -- |Object header information
 #field hdr,             <H5O_hdr_info_t>
 #endif
 
 #else
 
-#if (H5Fget_info_vers == 1)
+#if H5O_info_t_vers != 2
 -- |Version number of header format in file
 #field hdr.version,      CUInt
 
@@ -251,7 +251,7 @@ import Foreign.Ptr.Conventions
 
 #endif
 
-#if (H5Fget_info_vers == 1)
+#if H5O_info_t_vers != 2
 -- |v1/v2 B-tree & local/fractal heap for groups, B-tree for chunked datasets
 #field meta_size.obj,   <H5_ih_info_t>
 
@@ -266,10 +266,11 @@ import Foreign.Ptr.Conventions
 -- |Typedef for message creation indexes
 #newtype H5O_msg_crt_idx_t, Eq, Ord, Read
 
-#if (H5Fget_info_vers == 1)
+#if H5O_iterate_t_vers == 1 || H5_VERSION_LE(1,11,0)
 -- |Prototype for 'h5o_visit' / 'h5o_visit_by_name' operator
 type H5O_iterate_t a = FunPtr (HId_t -> CString -> In H5O_info_t -> InOut a -> IO HErr_t)
 #else
+-- here we implicitly assume H5O_info_t_vers == 2 also, to keep the code simple for now
 -- |Prototype for 'h5o_visit' / 'h5o_visit_by_name' operator
 type H5O_iterate2_t a = FunPtr (HId_t -> CString -> In H5O_info2_t -> InOut a -> IO HErr_t)
 #endif
@@ -373,7 +374,7 @@ type H5O_mcdt_search_cb_t a = FunPtr (InOut a -> IO H5O_mcdt_search_ret_t)
 -- Returns non-negative on success, negative on failure.
 --
 -- > herr_t H5Oget_info(hid_t loc_id, H5O_info_t *oinfo);
-#if (H5Fget_info_vers == 1)
+#if H5Oget_info_vers == 1 || H5_VERSION_LE(1,11,0)
 #ccall H5Oget_info, <hid_t> -> Out <H5O_info_t> -> IO <herr_t>
 #else
 #ccall H5Oget_info, <hid_t> -> Out <H5O_info2_t> -> IO <herr_t>
@@ -594,7 +595,7 @@ type H5O_mcdt_search_cb_t a = FunPtr (InOut a -> IO H5O_mcdt_search_ret_t)
 --
 -- > herr_t H5Ovisit(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
 -- >     H5O_iterate_t op, void *op_data);
-#if (H5Fget_info_vers == 1)
+#if H5Ovisit_vers == 1 || H5_VERSION_LE(1,11,0)
 #ccall H5Ovisit, <hid_t> -> <H5_index_t> -> <H5_iter_order_t> -> H5O_iterate_t a -> InOut a -> IO <herr_t>
 #else
 #ccall H5Ovisit, <hid_t> -> <H5_index_t> -> <H5_iter_order_t> -> H5O_iterate2_t a -> InOut a -> IO <herr_t>

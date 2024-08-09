@@ -165,7 +165,7 @@ data LinkInfo = LinkInfo
     , linkValSize     :: CSize
     } deriving (Eq, Ord, Read, Show)
 
-#if H5Fget_info_vers == 1
+#if H5L_info_t_vers == 1 || H5_VERSION_LE(1,11,0)
 readLinkInfo :: H5L_info_t -> LinkInfo
 readLinkInfo i  = LinkInfo
     { linkType          = linkTypeFromCode (h5l_info_t'type i)
@@ -174,7 +174,7 @@ readLinkInfo i  = LinkInfo
     , linkCSet          = cSetFromCode (h5l_info_t'cset i)
     , linkValSize       = h5l_info_t'u'val_size i
     }
-#elif H5Fget_info_vers == 2
+#else
 readLinkInfo :: H5L_info_t -> LinkInfo
 readLinkInfo i  = LinkInfo
     { linkType          = linkTypeFromCode (h5l_info2_t'type i)
@@ -183,8 +183,6 @@ readLinkInfo i  = LinkInfo
     , linkCSet          = cSetFromCode (h5l_info2_t'cset i)
     , linkValSize       = h5l_info2_t'u'val_size i
     }
-#else
-#error "unknown info vers"
 #endif
 
 getLinkInfo :: Location loc => loc -> BS.ByteString -> Maybe LAPL -> IO LinkInfo
@@ -193,7 +191,7 @@ getLinkInfo loc name lapl =
         withOut_ $ \info ->
             withErrorCheck_ $
                 BS.useAsCString name $ \cname ->
-#if (H5Fget_info_vers == 1)
+#if H5L_info_t_vers == 1 || H5_VERSION_LE(1,11,0)
                     h5l_get_info (hid loc) cname info (maybe h5p_DEFAULT hid lapl)
 #else
                     h5l_get_info2 (hid loc) cname info (maybe h5p_DEFAULT hid lapl)
@@ -205,13 +203,13 @@ getSymLinkVal loc name mb_lapl =
         let lapl = maybe h5p_DEFAULT hid mb_lapl
         info <- withOut_ $ \info ->
             withErrorCheck_ $
-#if (H5Fget_info_vers == 1)
+#if H5L_info_t_vers == 1 || H5_VERSION_LE(1,11,0)
                     h5l_get_info (hid loc) cname info lapl
 #else
                     h5l_get_info2 (hid loc) cname info lapl
 #endif
 
-#if (H5Fget_info_vers == 1)
+#if H5L_info_t_vers == 1 || H5_VERSION_LE(1,11,0)
         let n = h5l_info_t'u'val_size info
 #else
         let n = h5l_info2_t'u'val_size info
@@ -263,7 +261,7 @@ iterateLinks loc indexType order startIndex op =
         withInOut_ (maybe 0 hSize startIndex) $ \ioStartIndex ->
             withErrorCheck_ $
                 with_iterate_t op $ \iop opData ->
-#if (H5Fget_info_vers == 1)
+#if H5L_iterate_t_vers == 1 || H5_VERSION_LE(1,11,0)
                     h5l_iterate (hid loc) (indexTypeCode indexType) (iterOrderCode order) ioStartIndex iop opData
 #else
                     h5l_iterate2 (hid loc) (indexTypeCode indexType) (iterOrderCode order) ioStartIndex iop opData
@@ -276,7 +274,7 @@ iterateLinksByName loc groupName indexType order startIndex lapl op =
             withErrorCheck_ $
                 with_iterate_t op $ \iop opData ->
                     BS.useAsCString groupName $ \cgroupName ->
-#if (H5Fget_info_vers == 1)
+#if H5L_iterate_t_vers == 1 || H5_VERSION_LE(1,11,0)
                         h5l_iterate_by_name (hid loc) cgroupName (indexTypeCode indexType) (iterOrderCode order) ioStartIndex iop opData (maybe h5p_DEFAULT hid lapl)
 #else
                         h5l_iterate_by_name2 (hid loc) cgroupName (indexTypeCode indexType) (iterOrderCode order) ioStartIndex iop opData (maybe h5p_DEFAULT hid lapl)
@@ -286,7 +284,7 @@ visitLinks :: Location t => t -> IndexType -> IterOrder -> (Group -> BS.ByteStri
 visitLinks loc indexType order op =
     withErrorCheck_ $
         with_iterate_t op $ \iop opData ->
-#if (H5Fget_info_vers == 1)
+#if H5Lvisit_vers == 1 || H5_VERSION_LE(1,11,0)
             h5l_visit (hid loc) (indexTypeCode indexType) (iterOrderCode order) iop opData
 #else
             h5l_visit2 (hid loc) (indexTypeCode indexType) (iterOrderCode order) iop opData
@@ -297,7 +295,7 @@ visitLinksByName loc groupName indexType order lapl op =
     withErrorCheck_ $
         with_iterate_t op $ \iop opData ->
             BS.useAsCString groupName $ \cgroupName ->
-#if (H5Fget_info_vers == 1)
+#if H5Lvisit_by_name_vers == 1 || H5_VERSION_LE(1,11,0)
                 h5l_visit_by_name (hid loc) cgroupName (indexTypeCode indexType) (iterOrderCode order) iop opData (maybe h5p_DEFAULT hid lapl)
 #else
                 h5l_visit_by_name2 (hid loc) cgroupName (indexTypeCode indexType) (iterOrderCode order) iop opData (maybe h5p_DEFAULT hid lapl)
