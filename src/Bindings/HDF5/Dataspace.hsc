@@ -61,6 +61,7 @@ import Bindings.HDF5.Error
 import Bindings.HDF5.Object
 import Bindings.HDF5.Raw.H5I
 import Bindings.HDF5.Raw.H5S
+import Bindings.HDF5.Raw.H5P
 import Control.Exception (assert)
 import Control.Monad
 import qualified Data.ByteString as BS
@@ -141,7 +142,7 @@ encodeDataspace (Dataspace space_id) =
             withErrorCheck_ $
 #if H5_VERSION_GE(1,12,0)
 # if H5Sencode_vers == 2
-                h5s_encode space_id buf ioBufSz H5P_DEFAULT
+                h5s_encode space_id buf ioBufSz h5p_DEFAULT
 # elif H5Sencode_vers == 1
                 h5s_encode space_id buf ioBufSz
 # else

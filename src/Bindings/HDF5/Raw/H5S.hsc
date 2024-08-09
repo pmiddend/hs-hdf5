@@ -175,11 +175,11 @@ import Foreign.Ptr.Conventions
 # if H5Sencode_vers == 2
 -- > herr_t H5Sencode2 (hid_t obj_id, void *buf, size_t *nalloc, hid_t fapl)
 #  ccall H5Sencode2, <hid_t> -> OutArray CChar -> InOut <size_t> -> <hid_t> -> IO <herr_t>
-h5s_encode = H5Sencode2
+h5s_encode = h5s_encode2
 # elif H5Sencode_vers == 1
 -- > herr_t H5Sencode1(hid_t obj_id, void *buf, size_t *nalloc)
 #  ccall H5Sencode1, <hid_t> -> OutArray CChar -> InOut <size_t> -> IO <herr_t>
-h5s_encode = H5Sencode1
+h5s_encode = h5s_encode1
 # else
 #  error "H5Sencode_vers set to invalid value"
 # endif
